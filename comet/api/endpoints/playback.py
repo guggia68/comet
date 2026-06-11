@@ -34,8 +34,9 @@ def _get_debrid_credentials(config: dict, service_index: int = None):
     return config.get("debridService", "torrent"), config.get("debridApiKey", "")
 
 
-@router.get(
+@router.api_route(
     "/{b64config}/playback/{hash}/{service_index}/{index}/{season}/{episode}/{torrent_name:path}",
+    methods=["GET", "HEAD"],
     tags=["Stremio"],
     summary="Playback Proxy",
     description="Proxies the playback request to the Debrid service or returns a cached link.",
@@ -179,8 +180,9 @@ async def playback(
 
 
 # Legacy route
-@router.get(
+@router.api_route(
     "/{b64config}/playback/{hash}/{index}/{season}/{episode}/{torrent_name:path}",
+    methods=["GET", "HEAD"],
     tags=["Stremio"],
     summary="Playback Proxy (Legacy)",
     description="Legacy playback route for backward compatibility.",

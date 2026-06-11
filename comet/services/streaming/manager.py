@@ -74,9 +74,10 @@ async def add_active_connection(media_id: str, ip: str):
 
 
 async def combined_background_tasks(
-    connection_id: str, ip: str, streamer_close_task: BackgroundTask
+    connection_id: str, ip: str, streamer_close_task: BackgroundTask | None
 ):
-    await streamer_close_task()
+    if streamer_close_task is not None:
+        await streamer_close_task()
     await on_stream_end(connection_id, ip)
 
 

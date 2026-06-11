@@ -370,8 +370,33 @@ class StremThru:
             # Sort by score descending
             scored_files.sort(key=lambda x: x["score"], reverse=True)
 
-            # Select best file
-            target_file = scored_files[0]
+            target_file = None
+            download_link = None
+            rejected_links = []
+
+            for candidate in scored_files:
+                response = await self.session.post(
+                    f"{self.base_url}/link/generate?client_ip={self.client_ip}",
+                    json={"link": candidate["link"]},
+                )
+                link = await response.json()
+                generated_link = link.get("data", {}).get("link")
+
+                if generated_link:
+                    target_file = candidate
+                    download_link = generated_link
+                    break
+
+                error = link.get("error", {})
+                rejected_links.append(
+                    error.get("message") or error.get("code") or link.get("message") or "unknown"
+                )
+
+            if not target_file:
+                logger.warning(
+                    f"No playable debrid links found for {hash}; rejected candidates: {rejected_links[:5]}"
+                )
+                return
 
             logger.log(
                 "PLAYBACK",
@@ -416,12 +441,6 @@ class StremThru:
                     cache_availability(self.real_debrid_name, all_files_for_cache)
                 )
 
-            link = await self.session.post(
-                f"{self.base_url}/link/generate?client_ip={self.client_ip}",
-                json={"link": target_file["link"]},
-            )
-            link = await link.json()
-
-            return link["data"]["link"]
+            return download_link
         except Exception as e:
             logger.warning(f"Exception while getting download link for {hash}: {e}")
